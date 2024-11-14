@@ -1,5 +1,6 @@
 import logging
 import os
+import json
 
 from typing import List
 
@@ -109,6 +110,12 @@ class Roi:
 
 class TotalSegmentatorProcessor:
     """Automatic seed and roi detector based on totalsegmentator."""
+
+    def load_manual_slicer_landmarks(self, filepath: str):
+        with open(filepath) as f:
+            points = json.load(f)["markups"][0]["controlPoints"]
+
+        return {point["label"]: np.array(point["position"]) for point in points}
 
     def __call__(self, logging_level: int):
         self.logging_level = logging_level
