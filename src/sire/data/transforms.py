@@ -98,8 +98,8 @@ class SampleSIRE(Transform, Randomizable):
             "sample": {
                 "spheres": sampled_spheres,
                 "center": point,
-                "index": torch.tensor([0]),
-                "contours": torch.zeros(1, len(labels), 3),
+                "index": torch.tensor([0], device=self.device),
+                "contours": torch.zeros(1, len(labels), 3, device=self.device),
             },
         }
 
