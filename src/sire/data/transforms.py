@@ -200,6 +200,69 @@ class SampleSIRESegmentation(SampleSIRE):
 
         return all_data
 
+class SamplePairedSIRESegmentation(SampleSIRESegmentation):
+    def _get_sample(self, data: Dict[str, Any], index: int):
+        data = move_data_to_device(data, self.device)
+        
+        # Global pointers
+        id = data["id"]
+        image = data["image"]
+        affine = data["image_meta_dict"]["affine"]
+        scales = data["scales_meta_dict"]["scales"]
+        nverts = data["scales_meta_dict"]["nverts"]
+
+        # Local copies
+        spheres = copy.deepcopy(data["scales"])
+        center = copy.deepcopy(data["contour"][self.contour_types[0]]["center"][index])
+        normal = copy.deepcopy(data["contour"][self.contour_types[0]]["normal"][index])
+        branch = copy.deepcopy(data["contour"][self.contour_types[0]]["branch"][index])
+
+        if data["contour"][self.contour_types[0]]["points"][index] is not None:
+            points = copy.deepcopy(
+                torch.stack(
+                    [data["contour"][contour_type]["points"][index] for contour_type in self.contour_types], dim=1
+                )
+            )
+        else:
+            points = torch.zeros(1, 1, 3)
+
+        # Apply random noise to center and sample spheres
+        noise_center = center + self._generate_noise(normal)
+        sampled_spheres = self._get_spheres(image, affine, spheres, noise_center)
+
+        return {
+            "global": {
+                "id": id,
+                "contour_types": self.contour_types,
+                "image": image,
+                "affine": affine,
+                "scales": scales,
+                "nverts": nverts,
+            },
+            "sample": {
+                "spheres": sampled_spheres,
+                "label": self.contour_types,
+                "index": torch.tensor(index),
+                "normal": normal,
+                "center": noise_center,
+                "contours": points,
+                "branch": branch,
+            },
+        }
+
+    def __call__(self, data: Dict[str, Any]):
+        num_all_samples = len(data["contour"][self.contour_types[0]]["center"])
+
+        if self.num_samples is None:
+            indices = torch.arange(num_all_samples)
+        else:
+            replace = self.num_samples > num_all_samples
+            indices = self.R.choice(torch.arange(num_all_samples), size=self.num_samples, replace=replace)
+
+        all_data = [self._get_sample(data, indice) for indice in indices]
+        self.R.shuffle(all_data)
+
+        return all_data
 
 class SampleSIRETracker(SampleSIRE):
     def _get_point(self, centerline_function: Callable, index: int):

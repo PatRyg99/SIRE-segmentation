@@ -1,0 +1,30 @@
+model:
+  seed: 0
+  out_channels: 2
+  dsnt_sigma: 0.01
+  n_rad: 128
+  n_angles: 128
+  lr: 0.001
+
+datamodule:
+  contour_path: "<path_to_cso_annotations>"
+  image_path: "<path_to_hdf5_file>"
+  split_path: "src/sire/splits/segmentation_split.yml"
+  contour_types: ["lumen"]
+  branch_types: ["abdominal_aorta", "iliac_left", "iliac_right", "renal_left", "renal_right"]
+  
+  # Transforms
+  n_angles: 128
+  subdivisions: 2
+  center_noise: 1
+  
+  npoints: 32
+  sire_scales: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80]
+
+  # Dataloaders
+  bs: 2
+  num_workers: 0
+
+trainer:
+  accelerator: "cpu"
+  max_epochs: 100

@@ -1,0 +1,27 @@
+model:
+  seed: 0
+  out_channels: 1
+  num_scales: 16
+  subdivisions: 3
+  lr: 0.005
+
+datamodule:
+  centerline_path: "<path-to-centerline-npy-directory"
+  image_path: "<path_to_hdf5_file>"
+  split_path: "src/sire/splits/tracker_split.yml"
+  
+  # Transforms
+  n_angles: 128
+  subdivisions: 3  
+  center_noise: 0
+  
+  npoints: 32
+  sire_scales: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80]
+
+  # Dataloaders
+  bs: 2
+  num_workers: 0
+
+trainer:
+  accelerator: "cpu"
+  max_epochs: 
